@@ -4,6 +4,9 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
 
 
+# nltk.download('stopwords') -> uncomment if you don't have stopwords
+# nltk.download('punkt') -> uncomment if you don't have punkt
+
 def make_features(df, task, config=None):
     X = df["video_name"]
 
