@@ -1,0 +1,5 @@
+src/data/raw/
+.idea/
+src/__pycache__/
+.DS_Store
+
