@@ -5,6 +5,9 @@ from nltk.stem.snowball import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 
 
+# nltk.download('stopwords') -> uncomment if you don't have stopwords
+# nltk.download('punkt') -> uncomment if you don't have punkt
+
 def make_features(df, task, config=None):
     X = df["video_name"]
     y = get_output(df, task)
