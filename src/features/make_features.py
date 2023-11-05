@@ -9,7 +9,6 @@ from nltk.stem.snowball import PorterStemmer
 
 def make_features(df, task, config=None):
     X = df["video_name"]
-
     y = get_output(df, task)
 
     if config:
@@ -21,6 +20,14 @@ def make_features(df, task, config=None):
             X = X.apply(stemming)
         if config["use_tokenization"]:
             X = X.apply(tokenize)
+        if config["is_start_word"]:
+            X = X.apply(is_start_word)
+        if config["is_end_word"]:
+            X = X.apply(is_end_word)
+        if config["is_capitalized"]:
+            X = X.apply(is_capitalized)
+        if config["is_punctuation"]:
+            X = X.apply(is_punctuation)
 
     return X, y
 
@@ -47,9 +54,26 @@ def stemming(text):
     words = nltk.word_tokenize(text)
     stemmed_words = [stemmer.stem(word) for word in words]
     stemmed_text = ' '.join(stemmed_words)
-
     return stemmed_text
 
 
 def tokenize(text):
     return " ".join([word for word in word_tokenize(text)])
+
+def is_start_word(word):
+    if word[0].isupper():
+        return 1
+    else:
+        return 0
+
+def is_end_word(word):
+    if word == ".":
+        return 0
+    else:
+        return 1
+
+def is_capitalized(word):
+    return word[0].isupper()
+
+def is_punctuation(word):
+    return word in [".", ",", "!", "?"]

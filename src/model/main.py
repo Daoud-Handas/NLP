@@ -7,10 +7,12 @@ from sklearn.pipeline import Pipeline
 
 from model.dumb_model import LogisticRegressionModel, RandomForestModel, DumbModel
 
+from sklearn.base import BaseEstimator
 
 
 def make_model(config=None):
     return Pipeline([
         ("count_vectorizer", CountVectorizer()),
-        ("dumbModel", LogisticRegressionModel())
+        ("RandomForest", RandomForestModel())
     ])
+
