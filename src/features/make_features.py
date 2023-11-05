@@ -1,7 +1,8 @@
 import nltk
-from nltk import word_tokenize
+from nltk import word_tokenize, ngrams
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 # nltk.download('stopwords') -> uncomment if you don't have stopwords
@@ -10,7 +11,6 @@ from nltk.stem.snowball import PorterStemmer
 def make_features(df, task, config=None):
     X = df["video_name"]
     y = get_output(df, task)
-
     if config:
         if config["use_lowercase"]:
             X = X.str.lower()
@@ -20,6 +20,7 @@ def make_features(df, task, config=None):
             X = X.apply(stemming)
         if config["use_tokenization"]:
             X = X.apply(tokenize)
+<<<<<<< HEAD
         if config["is_start_word"]:
             X = X.apply(is_start_word)
         if config["is_end_word"]:
@@ -28,7 +29,15 @@ def make_features(df, task, config=None):
             X = X.apply(is_capitalized)
         if config["is_punctuation"]:
             X = X.apply(is_punctuation)
+=======
+        if config["use_ngram"]:
+            X = X.apply(make_ngrams)
+        if config["use_ngram_range"]:
+            X = X.apply(make_mgrams_range)
+>>>>>>> main
 
+        vectorizer = CountVectorizer()
+        X = vectorizer.fit_transform(X)
     return X, y
 
 
@@ -60,6 +69,7 @@ def stemming(text):
 def tokenize(text):
     return " ".join([word for word in word_tokenize(text)])
 
+<<<<<<< HEAD
 def is_start_word(word):
     if word[0].isupper():
         return 1
@@ -77,3 +87,18 @@ def is_capitalized(word):
 
 def is_punctuation(word):
     return word in [".", ",", "!", "?"]
+=======
+
+def make_ngrams(text, n=3):
+    words = word_tokenize(text)
+    n_grams = list(ngrams(words, n))
+    return ' '.join([' '.join(grams) for grams in n_grams])
+
+
+def make_mgrams_range(text, min_n=1, max_n=4):
+    words = word_tokenize(text)
+    n_grams = []
+    for n in range(min_n, max_n + 1):
+        n_grams += list(ngrams(words, n))
+    return ' '.join([' '.join(grams) for grams in n_grams])
+>>>>>>> main
