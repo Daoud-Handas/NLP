@@ -1,4 +1,4 @@
-src/data/raw/
+data/raw/
 .idea/
 src/__pycache__/
 .DS_Store

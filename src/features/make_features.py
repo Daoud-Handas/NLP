@@ -20,7 +20,6 @@ def make_features(df, task, config=None):
             X = X.apply(stemming)
         if config["use_tokenization"]:
             X = X.apply(tokenize)
-<<<<<<< HEAD
         if config["is_start_word"]:
             X = X.apply(is_start_word)
         if config["is_end_word"]:
@@ -29,12 +28,10 @@ def make_features(df, task, config=None):
             X = X.apply(is_capitalized)
         if config["is_punctuation"]:
             X = X.apply(is_punctuation)
-=======
-        if config["use_ngram"]:
+        if config["make_ngrams"]:
             X = X.apply(make_ngrams)
-        if config["use_ngram_range"]:
+        if config["make_mgrams_range"]:
             X = X.apply(make_mgrams_range)
->>>>>>> main
 
         vectorizer = CountVectorizer()
         X = vectorizer.fit_transform(X)
@@ -69,12 +66,13 @@ def stemming(text):
 def tokenize(text):
     return " ".join([word for word in word_tokenize(text)])
 
-<<<<<<< HEAD
+
 def is_start_word(word):
     if word[0].isupper():
         return 1
     else:
         return 0
+
 
 def is_end_word(word):
     if word == ".":
@@ -82,12 +80,14 @@ def is_end_word(word):
     else:
         return 1
 
+
 def is_capitalized(word):
     return word[0].isupper()
 
+
 def is_punctuation(word):
     return word in [".", ",", "!", "?"]
-=======
+
 
 def make_ngrams(text, n=3):
     words = word_tokenize(text)
@@ -101,4 +101,3 @@ def make_mgrams_range(text, min_n=1, max_n=4):
     for n in range(min_n, max_n + 1):
         n_grams += list(ngrams(words, n))
     return ' '.join([' '.join(grams) for grams in n_grams])
->>>>>>> main
