@@ -5,8 +5,8 @@ from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 
-from data.make_dataset import make_dataset
-from features.make_features import make_features
+from NLP.data.make_dataset import make_dataset
+from features.make_features import make_features, make_features_is_name
 from model.main import make_model
 from model.dumb_model import LogisticRegressionModel, RandomForestModel
 
@@ -20,17 +20,32 @@ def cli():
 
 @click.command()
 @click.option("--task", help="Can be is_comic_video, is_name or find_comic_name")
+@click.option("--feature", help="Can be tokenize, stopwords, stemming or lowercase")
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
-@click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
-def train(task, input_filename, model_dump_filename):
+@click.option("--model_dump_filename", default="models/model.json", help="File to dump model")
+def train(task, feature, input_filename, model_dump_filename):
+
+    print(f"Evaluating feature {feature}")
+
+    config = {
+        "use_stemming": True if feature == "stemming" else False,
+        "use_lowercase": True if feature == "lowercase" else False,
+        "use_stopwords": True if feature == "stopwords" else False,
+        "use_tokenization": True if feature == "tokenize" else False,
+        "is_start_word": True if feature == "is_start_word" else False,
+        "is_end_word": True if feature == "is_end_word" else False,
+        "is_capitalized": True if feature == "is_capitalized" else False,
+        "is_punctuation": True if feature == "is_punctuation" else False,
+        "use_ngram": True if feature == "ngram" else False,
+        "use_ngram_range": True if feature == "ngram_range" else False,
+    }
+
     df = make_dataset(input_filename)
     X, y = make_features(df, task)
 
-    model = make_model()
-
     vectorizer = CountVectorizer()
     X = vectorizer.fit_transform(X)
-    model = LogisticRegressionModel()
+    model = make_model(config)
 
     model.fit(X, y)
     return model.dump(model_dump_filename)
@@ -38,6 +53,7 @@ def train(task, input_filename, model_dump_filename):
 
 @click.command()
 @click.option("--task", help="Can be is_comic_video, is_name or find_comic_name")
+@click.option("--feature", help="Can be tokenize, stopwords, stemming or lowercase")
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
 @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
 @click.option("--output_filename", default="data/processed/prediction.csv", help="Output file for predictions")
@@ -86,13 +102,16 @@ def evaluate(task, input_filename, feature):
         "is_punctuation": True if feature == "is_punctuation" else False,
         "use_ngram": True if feature == "ngram" else False,
         "use_ngram_range": True if feature == "ngram_range" else False,
-
     }
 
     # Object with .fit, .predict methods
 
     df = make_dataset(input_filename)
-    X, y = make_features(df, task)
+    # X, y = make_features(df, task)
+
+    X, y = make_features_is_name(df, task)
+    print(X[:10])
+    print(y[:10])
 
     model = make_model(config)
     return evaluate_model(model, X, y)

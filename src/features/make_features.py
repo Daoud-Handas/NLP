@@ -1,4 +1,7 @@
+from ast import literal_eval
+
 import nltk
+import numpy as np
 from nltk import word_tokenize, ngrams
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
@@ -7,6 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 # nltk.download('stopwords') -> uncomment if you don't have stopwords
 # nltk.download('punkt') -> uncomment if you don't have punkt
+
 
 def make_features(df, task, config=None):
     X = df["video_name"]
@@ -20,14 +24,6 @@ def make_features(df, task, config=None):
             X = X.apply(stemming)
         if config["use_tokenization"]:
             X = X.apply(tokenize)
-        if config["is_start_word"]:
-            X = X.apply(is_start_word)
-        if config["is_end_word"]:
-            X = X.apply(is_end_word)
-        if config["is_capitalized"]:
-            X = X.apply(is_capitalized)
-        if config["is_punctuation"]:
-            X = X.apply(is_punctuation)
         if config["make_ngrams"]:
             X = X.apply(make_ngrams)
         if config["make_mgrams_range"]:
@@ -36,6 +32,42 @@ def make_features(df, task, config=None):
         vectorizer = CountVectorizer()
         X = vectorizer.fit_transform(X)
     return X, y
+
+
+def make_features_is_name(df, task):
+    X = df["video_name"]
+    y = get_output(df, task)
+    y = y.apply(literal_eval)
+
+    if task == "is_name":
+        X = X.apply(extract_word_info)
+        sentences = []
+        for title in X:
+            features = []
+            for word in title:
+                features.append(
+                    [word["is_start_word"], word["is_end_word"], word["is_capitalized"], word["is_punctuation"]])
+            sentences.append([item for sublist in features for item in sublist])
+        # X = np.array(sentences)
+
+        # get biggest sentence
+        max_len_x = max([len(sentence) for sentence in sentences])
+
+        # pad sentences
+        for i, sentence in enumerate(sentences):
+            if len(sentence) < max_len_x:
+                sentences[i] = np.pad(sentence, (0, max_len_x - len(sentence)), 'constant', constant_values=(-1))
+
+        # get biggest label
+        # pad y
+        max_len_y = max([len(label) for label in y])
+
+        for i, label in enumerate(y):
+            if len(label) < max_len_y:
+                print(len(label))
+                y[i] = np.pad(np.array(label), (0, max_len_y - len(label)), 'constant', constant_values=(-1))
+
+        return sentences, y
 
 
 def get_output(df, task):
@@ -67,28 +99,6 @@ def tokenize(text):
     return " ".join([word for word in word_tokenize(text)])
 
 
-def is_start_word(word):
-    if word[0].isupper():
-        return 1
-    else:
-        return 0
-
-
-def is_end_word(word):
-    if word == ".":
-        return 0
-    else:
-        return 1
-
-
-def is_capitalized(word):
-    return word[0].isupper()
-
-
-def is_punctuation(word):
-    return word in [".", ",", "!", "?"]
-
-
 def make_ngrams(text, n=3):
     words = word_tokenize(text)
     n_grams = list(ngrams(words, n))
@@ -101,3 +111,36 @@ def make_mgrams_range(text, min_n=1, max_n=4):
     for n in range(min_n, max_n + 1):
         n_grams += list(ngrams(words, n))
     return ' '.join([' '.join(grams) for grams in n_grams])
+
+
+def is_start_word(i):
+    return int(i == 0)
+
+
+def is_end_word(i, len_text):
+    return int(i == len_text - 1)
+
+
+def is_capitalized(word):
+    return int(word[0].isupper())
+
+
+def is_punctuation(word):
+    return int(word in [".", ",", "!", "?"])
+
+
+def extract_word_info(text):
+    words = text.split()
+    word_info = []
+
+    for i, word in enumerate(words):
+        info = {
+            "word": word,
+            "is_start_word": is_start_word(i),
+            "is_end_word": is_end_word(i, len(words)),
+            "is_capitalized": is_capitalized(word),
+            "is_punctuation": is_punctuation(word)
+        }
+        word_info.append(info)
+
+    return word_info
