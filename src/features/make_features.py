@@ -4,10 +4,6 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 
-
-# nltk.download('stopwords') -> uncomment if you don't have stopwords
-# nltk.download('punkt') -> uncomment if you don't have punkt
-
 def make_features(df, task, config=None):
     X = df["video_name"]
     y = get_output(df, task)
@@ -67,18 +63,18 @@ def tokenize(text):
     return " ".join([word for word in word_tokenize(text)])
 
 
-def is_start_word(word):
-    if word[0].isupper():
+def is_start_word(iword):
+    if iword == 0:
         return 1
     else:
         return 0
 
 
-def is_end_word(word):
-    if word == ".":
-        return 0
-    else:
+def is_end_word(iword, len_text):
+    if iword == len_text - 1:
         return 1
+    else:
+        return 0
 
 
 def is_capitalized(word):

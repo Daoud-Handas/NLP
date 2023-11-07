@@ -2,15 +2,12 @@ import click
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
 
 from data.make_dataset import make_dataset
 from features.make_features import make_features
 from model.main import make_model
-from model.dumb_model import LogisticRegressionModel, RandomForestModel
 
-from model.dumb_model import DumbModel, LogisticRegressionModel, RandomForestModel, LinearModel
+from model.dumb_model import LogisticRegressionModel, RandomForestModel, LinearModel
 
 
 @click.group()
@@ -89,17 +86,14 @@ def evaluate(task, input_filename, feature):
 
     }
 
-    # Object with .fit, .predict methods
-
     df = make_dataset(input_filename)
-    X, y = make_features(df, task)
+    X, y = make_features(df, task, config)
 
     model = make_model(config)
     return evaluate_model(model, X, y)
 
 
 def evaluate_model(model, X, y):
-    # Scikit learn has function for cross validation
     scores = cross_val_score(model, X, y, scoring="accuracy")
     print(scores)
 
