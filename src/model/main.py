@@ -7,9 +7,10 @@ from sklearn.pipeline import Pipeline
 
 from model.dumb_model import DumbModel, LogisticRegressionModel
 
+from model.dumb_model import RandomForestModel
+
 
 def make_model(config=None):
     return Pipeline([
-        ("count_vectorizer", CountVectorizer()),
-        ("dumbModel", LogisticRegressionModel())
+        ("dumbModel", RandomForestModel())
     ])

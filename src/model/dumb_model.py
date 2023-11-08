@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression, LinearRegression
@@ -26,7 +27,14 @@ class LogisticRegressionModel:
         self.trained = None
 
     def fit(self, X, y):
-        self.trained = self.model.fit(X, y)
+        try:
+            print("fitting")
+            print(X)
+            print(y)
+            self.trained = self.model.fit(X, y)
+        except Exception as e:
+            print("An error occurred during training:")
+            print(e)
 
     def predict(self, X):
         if self.trained is None:
@@ -35,17 +43,18 @@ class LogisticRegressionModel:
 
     def dump(self, filename_output):
         print("dumping")
-        if self.trained is None:
-            raise ValueError("Model not trained")
-        else:
-            model_dict = {
-                "coef": self.trained.coef_.tolist(),
-                "intercept": self.trained.intercept_.tolist(),
-                "classes": self.trained.classes_.tolist(),
-                "solver": self.trained.solver,
-            }
-            with open(filename_output, 'w') as json_file:
-                json.dump(model_dict, json_file)
+        print(self.trained)
+        # if self.trained is None:
+        #     raise ValueError("Model not trained")
+        # else:
+        #     model_dict = {
+        #         "coef": self.trained.coef_.tolist(),
+        #         "intercept": self.trained.intercept_.tolist(),
+        #         "classes": self.trained.classes_.tolist(),
+        #         "solver": self.trained.solver,
+        #     }
+        #     with open(filename_output, 'w') as json_file:
+        #         json.dump(model_dict, json_file)
 
     def load(self, filename_input):
         with open(filename_input) as json_file:
@@ -69,7 +78,7 @@ class RandomForestModel:
         self.model.fit(X, y)
 
     def predict(self, X):
-        return self.model.__predict(X)
+        return self.model.predict(X)
 
     def dump(self, filename_output):
         with open(filename_output, "w") as f:
