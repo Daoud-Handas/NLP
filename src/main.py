@@ -2,15 +2,10 @@ import click
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
 
 from NLP.data.make_dataset import make_dataset
 from features.make_features import make_features, make_features_is_name
 from model.main import make_model
-from model.dumb_model import LogisticRegressionModel, RandomForestModel
-
-from model.dumb_model import DumbModel, LogisticRegressionModel, RandomForestModel, LinearModel
 
 
 @click.group()
@@ -24,7 +19,6 @@ def cli():
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
 @click.option("--model_dump_filename", default="models/model.json", help="File to dump model")
 def train(task, feature, input_filename, model_dump_filename):
-
     print(f"Evaluating feature {feature}")
 
     config = {
@@ -77,7 +71,7 @@ def predict(task, input_filename, model_dump_filename, output_filename):
     X, y = make_features(df, task)
     vectorizer = CountVectorizer()
     X = vectorizer.fit_transform(X)
-    model = LogisticRegressionModel()
+    model = make_model()
     model.load(model_dump_filename)
 
     predict = model.predict(X)
@@ -91,40 +85,43 @@ def predict(task, input_filename, model_dump_filename, output_filename):
 def evaluate(task, input_filename, feature):
     print(f"Evaluating feature {feature}")
 
-    config = {
-        "use_stemming": True if feature == "stemming" else False,
-        "use_lowercase": True if feature == "lowercase" else False,
-        "use_stopwords": True if feature == "stopwords" else False,
-        "use_tokenization": True if feature == "tokenize" else False,
-        "is_start_word": True if feature == "is_start_word" else False,
-        "is_end_word": True if feature == "is_end_word" else False,
-        "is_capitalized": True if feature == "is_capitalized" else False,
-        "is_punctuation": True if feature == "is_punctuation" else False,
-        "use_ngram": True if feature == "ngram" else False,
-        "use_ngram_range": True if feature == "ngram_range" else False,
-    }
-
     # Object with .fit, .predict methods
-
     df = make_dataset(input_filename)
-    # X, y = make_features(df, task)
 
-    X, y = make_features_is_name(df, task)
-    print(X[:10])
-    print(y[:10])
+    if task == "is_name":
+        X, y = make_features_is_name(df, task)
+    else:
+        X, y = make_features(df, task)
 
-    model = make_model(config)
+    X = np.array(X)
+    y = y.values
+
+    model = make_model()
+
     return evaluate_model(model, X, y)
 
 
 def evaluate_model(model, X, y):
-    # Scikit learn has function for cross validation
-    scores = cross_val_score(model, X, y, scoring="accuracy")
-    print(scores)
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score
 
-    print(f"Got accuracy {100 * np.mean(scores)}%")
+    # Divisez vos données en ensembles d'entraînement et de test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    return scores
+    print(f"X_train: {X_train.shape}")
+    print(f"X_test: {X_test.shape}")
+    print(f"y_train: {y_train.shape}")
+    print(f"y_test: {y_test.shape}")
+
+    # Entraînez le modèle sur les données d'entraînement
+    model.fit(X_train, y_train)
+
+    # Faites des prédictions sur les données de test
+    y_pred = model.predict(X_test)
+
+    # Calculez l'accuracy sur les données de test
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Accuracy: {accuracy}")
 
 
 cli.add_command(train)

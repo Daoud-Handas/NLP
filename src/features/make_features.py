@@ -6,6 +6,7 @@ from nltk import word_tokenize, ngrams
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
+import re
 
 
 # nltk.download('stopwords') -> uncomment if you don't have stopwords
@@ -33,11 +34,23 @@ def make_features(df, task, config=None):
         X = vectorizer.fit_transform(X)
     return X, y
 
+# Fonction pour convertir une chaîne de caractères en liste de mots
+def convert_string_to_list(input_string):
+    # Supprimez les caractères non alphabétiques et non numériques
+    cleaned_string = re.sub(r'[^a-zA-Z0-9\s]', '', input_string)
+    # Séparez la chaîne en mots en utilisant l'espace comme délimiteur
+    word_list = cleaned_string.split()
+    return word_list
+
 
 def make_features_is_name(df, task):
-    X = df["video_name"]
+    X = df["tokens"]
     y = get_output(df, task)
     y = y.apply(literal_eval)
+
+    # Parcourez les chaînes de caractères mal formatées et convertissez-les en listes de mots
+    for i, input_string in enumerate(X):
+        X[i] = convert_string_to_list(input_string)
 
     if task == "is_name":
         X = X.apply(extract_word_info)
@@ -46,9 +59,9 @@ def make_features_is_name(df, task):
             features = []
             for word in title:
                 features.append(
-                    [word["is_start_word"], word["is_end_word"], word["is_capitalized"], word["is_punctuation"]])
+                    [word["is_start_word"], word["is_end_word"], word["is_capitalized"],
+                     word["is_punctuation"]])
             sentences.append([item for sublist in features for item in sublist])
-        # X = np.array(sentences)
 
         # get biggest sentence
         max_len_x = max([len(sentence) for sentence in sentences])
@@ -64,8 +77,7 @@ def make_features_is_name(df, task):
 
         for i, label in enumerate(y):
             if len(label) < max_len_y:
-                print(len(label))
-                y[i] = np.pad(np.array(label), (0, max_len_y - len(label)), 'constant', constant_values=(-1))
+                y[i] = np.pad(label, (0, max_len_y - len(label)), 'constant', constant_values=(-1))
 
         return sentences, y
 
@@ -129,8 +141,7 @@ def is_punctuation(word):
     return int(word in [".", ",", "!", "?"])
 
 
-def extract_word_info(text):
-    words = text.split()
+def extract_word_info(words):
     word_info = []
 
     for i, word in enumerate(words):
